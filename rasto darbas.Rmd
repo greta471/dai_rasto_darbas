@@ -1,0 +1,186 @@
+---
+title: ' DAI rašto darbas. Vyrų ir moterų pajamų nelygybė Europoje XXI amžiuje'
+author: |
+  | Greta Sakalauskaitė
+  | 1811320, Ekonomika, 1 kursas, 6 grupė
+  | Vilniaus Universitetas (EVAF)
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    includes:
+      in_header: header_lt_text.txt
+geometry: left=3cm,right=3cm,top=2cm,bottom=2cm
+bibliography: bibliography.bib
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE,collapse = TRUE, cache = TRUE)
+```
+
+```{r, echo=FALSE, message=FALSE}
+if(!require(tidyverse)) install.packages("tidyverse"); require(tidyverse)
+if(!require(eurostat)) install.packages("eurostat"); require(eurostat)
+if(!require(reshape2)) install.packages("reshape2"); require(reshape2)
+if(!require(knitr)) install.packages("knitr"); require(knitr)
+```
+
+# 1. Įvadas
+Lyčių pajamų nelygybė yra gana rimta problema visame pasaulyje, ne išimtis ir Europa. Moterys labai dažnai už tą patį darbą gauna mažesnį atlyginimą negu vyrai, tai atsispindi ir grafikuose:
+```{r, echo=FALSE, message=FALSE}
+
+data <- get_eurostat("sdg_05_20", stringsAsFactors = FALSE)
+
+df <- data %>%
+  filter(time=="2017-01-01",
+         !(geo %in% c("EA19","EU27")))
+
+df1 <- data %>%
+  filter(time=="2010-01-01",
+         !geo %in% c("EA19","EU27"))
+
+ggplot(df1, aes(x=reorder(geo,values), values))+
+  geom_bar(stat= "identity",
+           fill="orange2")+
+  geom_text(aes(label=values), vjust=-0.5, color="black", position= position_dodge(0.9), size=2.5)+
+  labs(title = "Moterų darbo užmokesčio skirtumas
+(% nuo vyrų vidutinio valandinio darbo užmokesčio (bruto)), 2010 metai",
+       subtitle = "Šaltinis: Eurostat (sdg_05_20)",
+       x = "Šalis",
+       y = "Procentai")+
+  scale_y_continuous(name= " Procentai", limits=c(0,30))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+ggplot(df, aes(x=reorder(geo,values), values))+
+  geom_bar(stat= "identity",
+           fill="orange2")+
+  geom_text(aes(label=values), vjust=-0.5, color="black", position= position_dodge(0.9), size=2.5)+
+  labs(title = "Moterų darbo užmokesčio skirtumas
+(% nuo vyrų vidutinio valandinio darbo užmokesčio (bruto)), 2017 metai",
+       subtitle = "Šaltinis: Eurostat (sdg_05_20)",
+       x = "Šalis",
+       y = "Procentai")+
+  scale_y_continuous(name= " Procentai", limits=c(0,30))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+Grafikai rodo, keliais procentais moterų vidutinis valandinis darbo užmokestis yra mažesnis už vyrų vidutinį valandinį darbo užmokestį. Lyginant 2010 ir 2017 metus, situacija Europoje pagerėjo: 2010 metais Europos Sąjungoje moterys gaudavo vidutiniškai 17,1%  mažesnį atlyginimą, o 2017 metais šis skaičius Europos Sąjungoje sumažėjo iki 16%. Lietuvoje, skirtingai nuo daugumos Europos šalių, įvyko priešingai – 2010 metais moterų darbo užmokesčio skirtumas siekė 11,9%, tačiau 2017 metais išaugo iki 15,2%. Didžiausias vyrų ir moterų darbo užmokesčio skirtumas tiek 2010, tiek 2017 metais buvo užfiksuotas Estijoje, 2010 metais – 27,7%, o 2017 metais – 25,6%. Taigi, nors vyrų ir moterų pajamų nelygybė Europoje po truputį mažėja, pokyčiai nėra labai spartūs, tai išlieka problema daugumoje Europos valstybių. Todėl, savo rašto darbe išanalizuosiu kaip ir kodėl pasireiškia vyrų ir moterų pajamų nelygybė bei kokiais būdais yra stengiamasi mažinti lyčių pajamų nelygybę Europoje.
+
+# 2. Vyrų ir moterų pajamų nelygybės faktoriai
+### Viešojo bei privataus sektoriaus skirtumai
+
+Remiantis Europos komisijos duomenimis, buvo pastebėta, jog daugumoje Europos šalių lyčių pajamų nelygybė yra didesnė privačiame sektoriuje, lyginant su viešuoju sektoriumi. (@foubert2010gender). Tai atspindi ir lentelės duomenys: 
+```{r, echo=FALSE, message=FALSE}
+sector <- get_eurostat("earn_gr_gpgr2ct", stringsAsFactors = FALSE)
+
+df3 <- sector %>%
+  filter(time=="2017-01-01")
+table2 <- df3 %>%
+  dcast(geo~owner, value.var = "values")%>%
+  rename("Šalis"=geo, "Privatus sektorius"= PRV, "Viešas sektorius"= PUB)
+kable(table2, caption = "Vyrų ir moterų pajamų nelygybės skirtumai privačiame bei viešajame sektoriuose (%), 2017. Šaltinis: Eurostat (earn_gr_gpgr2ag)")
+  
+```
+
+Kaip matome, didžiausias lyčių pajamų nelygybės skirtumas tarp privataus ir viešojo sektoriaus, yra užfiksuotas Kipre: viešajame sektoriuje Kipro moterys uždirba netgi 6,6% daugiau nei vyrai, tačiau privačiame sektoriuje jų pajamos yra 22,8% mažesnės nei vyrų. Tiesa, yra šalių, tokių kaip Bulgarija, Suomija, Vengrija, Slovėnija, Jungtinė Karalystė, kuriose moterų pajamos 2017 metais buvo didesnės privačiame, o ne viešajame sektoriuje, tačiau tai nekeičia tendencijos, kad lyčių pajamų nelygybė yra didesnė privačiame sektoriuje. Lietuvoje lyčių pajamų nelygybė siekia 14,2% viešajame bei 15,7% privačiame sektoriuoje.
+
+### Horizontali ir vertikali darbo rinkos segregacija
+
+Dauguma ekspertų teigia, jog lytimi pagrįsta segregacija darbo rinkoje, yra viena pagrindinių lyčių pajamų nelygybės priežasčių. (@foubert2010gender). Horizontali arba sektorinė darbo rinkos segregacija pasireiškia tuomet, kai vyrai ir moterys dominuoja skirtinguose sektoriuose. Moterys dažniausiai dominuoja tuose sektoriuose, kurie yra prasčiau apmokami: švietimas, aptarnavimas ar slauga. Moterys taip pat  susiduria ir su nepalankia vertikalia arba profesine segregacija: moterys, dirbančios tame pačiame sektoriuje kaip ir vyrai ne retai užima mažiau vertinamas bei mažiau apmokamas pareigas: moterys dažniau dirba asistentėmis, administratorėmis, sekretorėmis, negu užima vadovaujančias pareigas. Taigi, tokia dvigubai nepalanki situacija moterų atžvilgiu, smarkiai skatina jų pajamų atsilikimą nuo vyrų pajamų.
+
+### Amžius
+
+Remiantis Europos komisijos išvadomis, žmonių amžius yra vienas svarbiausių lyčių pajamų nelygybės faktorių. (@boll2018gender). 
+```{r, echo=FALSE, message=FALSE}
+age <- get_eurostat("earn_gr_gpgr2ag", stringsAsFactors = FALSE)
+
+df2 <- age %>% 
+  filter(time=="2017-01-01")
+
+table1 <- df2 %>%
+  dcast(geo~age, value.var = "values") %>%
+  select(geo,Y_LT25,`Y25-34`,`Y35-44`,`Y45-54`,`Y55-64`,Y_GE65)%>%
+  rename("65+"=Y_GE65, "<25"=Y_LT25, "25-34"=`Y25-34`, "35-44"=`Y35-44`, "45-54"=`Y45-54`, "55-64"=`Y55-64`,"Šalis"=geo)
+kable(table1, caption = "Vyrų ir moterų pajamų nelygybė pagal amžiaus grupes (%), 2017 metai. Šaltinis: Eurostat (earn_gr_gpgr2ag)")
+          
+```
+
+Iš lentelės duomenų galime pastebėti, kad daugumoje Europos valstybių, lyčių pajamų nelygybė yra žymiai mažesnė, jaunų žmonių tarpe, o nuo 25-30 metų amžiaus, vyrų ir moterų pajamų skirtumas pradeda žymiai didėti. Taip nutinka dėl to, jog būtent šiame amžiuje moterys dažnai susilaukia vaikų, dėl to sustabdo savo karjerą, o tuo tarpu šio amžiaus vyrai kyla karjeros laiptais, todėl jų pajamos kyla. Net ir grįžus tęsti karjeros po motinystės atostogų, moterims sunku pasivyti vyrų atlyginimus, todėl vėlesniame amžiuje lyčių pajamų nelygybė dažnai tik didėja – moterys daugumoje Europos šalių gauna žymiai mažesnę pensiją nei vyrai, o tokiose Europos šalyse kaip Kipras, Ispanija bei Portugalija, 65 metų bei vyresnės moterys gauna kone perpus mažesnes pajamas nei vyrai. Dėl šios priežasties, vyresnio amžiaus moterų, gyvenančių arti skurdo ribos procentas yra didesnis – 20% moterų ir 15% vyrų Europoje susiduria su šia problema.(@europeancommision2019).
+
+### Moterų nedarbo lygis
+
+Yra pastebėta, jog šalyse, kuriose užfiksuota mažesnė vyrų ir moterų pajamų nelygybė, taip pat egzistuoja gana aukštas moterų nedarbo lygis. (@foubert2010gender). Pavyzdžiui, Italijoje, kurioje moterų ir vyrų darbo užmokesčio nelygybė buvo viena mažiausių (5%, 2017 metai), 15 – 64 metų moterų darbo lygis 2017 metais, remiantis Eurostat duomenimis, siekė tik 55,9%. Panaši situacija užfiksuota Turkijoje, Lenkijoje bei Maltoje. Tokia situacija parodo, jog vyrų ir moterų darbo užmokesčio nelygybės rodikliai neparodo viso situacijos rimtumo, nes tikėtina, jog išaugus moterų darbo lygiui, lyčių pajamų nelygybė tik didėtų.
+
+### Skirtingi veiklos sektoriai
+
+Lyčių pajamų nelygybė skirtingai pasireiškia skirtinguose veiklos sektoriuose. (@foubert2010gender).
+```{r, echo=FALSE, message=FALSE}
+sector1 <- get_eurostat("earn_gr_gpgr2", stringsAsFactors = FALSE)
+
+df4 <- sector1 %>%
+  filter(time=="2017-01-01",
+         nace_r2=="K"|
+         nace_r2=="P"|
+         nace_r2=="Q"|
+         nace_r2=="F"|
+         nace_r2=="B")
+  
+
+table3 <- df4 %>%
+  dcast(geo~nace_r2, value.var = "values")%>%
+  rename("Šalis"= geo, "Finansai"=K, "Švietimas"=P, "Sveikatos ir socialinė apsauga"=Q, "Statybos"=F, "Kasyba"=B)
+kable(table3, caption = "Lyčių pajamų nelygybė atskiruose sektoriuose (%), 2017 metai. Šaltinis: Eurostat (earn_gr_gpgr2)")
+```
+
+Kaip matome iš lentelės duomenų, didžiausia lyčių pajamų nelygybė Europos šalyse vyrauja finansų bei draudimo sektoriuje, Lietuvoje šiame sektoriuje dirbančios moterys uždirba vidutiniškai 38,1% mažiau nei vyrai. Taip pat galima pastebėti, jog tokiuose sektoriuose, kuriuose dirbančiųjų daugumą sudaro moterys, tokiuose kaip švietimas ir socialinė apsauga, taip pat vyrauja gana didelis lyčių pajamų skirtumas. Atvirkščias procesas vyksta tuose sektoriuose, kuriuose daugumą sudaro vyrai, pavyzdžiui statybose ar kasyboje. Šiuose sektoriuose, dirbančios moterys kai kuriose Europos šalyse uždirba netgi daugiau už vyrus.
+
+
+### Etatų problema
+
+Remiantis Europos Komisijos duomenimis didžioji dalis žmonių, dirbančiu nepilnu etatu, yra moterys. (@foubert2010gender).  Remiantis austrų atliktu tyrimu, moterys nepilnu etatu dažniausiai dirba 33-40 metų amžiaus, būtent tada, kai galima tikėtis didėjančio darbo užmokesčio, kai tuo tarpu vyrai nepilnu etatu dažniausiai dirba jaunystėje, arba artėjant išėjimui į pensiją. Austrų bei vokiečių atlikti tyrimai parodė, jog egzistuoja pajamų nelygybė tarp valandinio darbo užmokesčio dirbant pilnu ir nepilnu etatu – nepilnu etatu dirbantys žmonės vidutiniškai uždirba 31% mažiau Austrijoje ir 21% Vokietijoje. Taip yra todėl, kad darbas nepilnu etatu šiose šalyse yra labiau populiarus mažiau apmokamuose bei moterų darbininkių daugumą turinčiuose sektoriuose. Tiesa, yra pastebėta, kad lyčių pajamų nelygybė yra mažesnė dirbančių nepilnu etatu tarpe, tačiau atsižvelgus į tai, jog nepilnu etatu dirbantys žmonės (kurie dažniausiai yra moterys) uždirba mažiau, tai nepadeda mažinti pajamų nelygybės tarp vyrų ir moterų bendrame kontekste.
+
+### Išsilavinimas, tradicijos, stereotipai
+
+Vyrų ir moterų lygių galimybių komitetas pastebi, kad tradicijos bei stereotipai taip pat daro didelę įtaką lyčių pajamų nelygybei.(@advisorycommitteeonequalopportunitiesforwomenmen2009). Nusistovėjusios nuostatos ne retai daro įtaką moterims renkantis „moteriškas“ profesijas, kurios dažniausiai yra prasčiau apmokamos nei „vyriškos“ profesijos. Remiantis duomenimis, tik 8,4 procentai moterų pasirenka studijuoti matematiką, informacines technologijas ar inžineriją. Taip pat labai mažas skaičius, apie 29%, moterų dirba mokslinį ar techninį darbą. Taip pat nemažą įtaką moterims daro visuomenės lūkesčiai atsiduoti vaikų auginimui ir atsisakyti karjeros. Šios tradicijos bei stereotipai daro didelę įtaką moters gyvenimui bei skatina lyčių pajamų nelygybę. 
+
+### Moterų darbo jėgos nuvertinimas
+
+Moterų gebėjimai bei kompetencijos dažnai yra nuvertinamos, o ypač tose profesijose, kuriose egzistuoja moterų dauguma, o tai lemia mažesnį moterų darbo užmokestį. (@european2013tackling). Pavyzdžiui, fizinius darbus dirbantys vyrai dažnai yra labiau vertinami už fizinius darbus dirbančias moteris. Kaip pavyzdžius Europos Komisija pateikia tai, kad moteris, dirbanti kasininke parduotuvėje uždirba mažiau, už parduotuvės sandėlyje dirbantį vyrą, nors abiejuose darbuose reikalinga panaši kompetencija arba tai, jog moteris seselė uždirba mažiau už vyrą medicinos laboratorijoje, nors dirbant abejus darbus reikalinga labai panaši kvalifikacija.
+
+# 3. Lyčių pajamų nelygybės mažinimo būdai
+
+### Įmonių skatinimas laikytis lyčių lygybės principų
+
+Europos valstybės stengiasi imtis įvairių priemonių, jog paskatintų lyčių pajamų nelygybę įmonėse. Pavyzdžiui Šveicarijoje, įmonės gali būti apdovanotos lygaus atlyginimo sertifikatu, jeigu jos vykdo lygaus darbo užmokesčio politiką vyrų ir moterų tarpe.(@european2013tackling). Tuo tarpu Islandija ėmėsi kiek drastiškesnių priemonių: nuo 2018 metų kompanijos bei vyriausybės agentūros, turinčios daugiau kaip 25 darbuotojus, privalo gauti vyriausybės sertifikatą, jog jų darbo užmokesčio politika yra lygi visos lytims. Toms įmonėms, kurioms nepavyksta užtikrinti lygybės, skiriamos baudos. Vykdydama šią politiką Islandija tikisi visiškai panaikinti lyčių pajamų nelygybę iki 2022 metų.(@europeancommision2019).
+
+Taip pat įmonės yra skatinamos naudoti skaidrius darbo užmokesčio apmokėjimo principus. Pavyzdžiui Vokietijoje, Liuksemburge bei Šveicarijoje veikia virtuali programa *Logib*, kuri leidžia kompanijoms analizuoti savo darbo užmokesčio struktūrą bei patikrinti, ar įmonė moka vienodus atlyginimus panašią kvalifikaciją turintiems vyrams ir moterims. Programa taip pat gali nurodyti galimas nelygybės priežastis bei patiekti veiksmų planą, kaip išvengti darbo užmokesčio nelygybės.   (@european2013tackling)
+
+### Kampanijos, atskleidžiančios lyčių pajamų nelygybės problemas
+
+Kampanijos bei renginiai, skatinantys lyčių pajamų lygybę prisideda prie šios problemos mažinimo. (@europeancommision2019). Vienas tokių renginių yra 2011 metais pradėta švęsti *Europos lygaus darbo užmokesčio diena (European Equal Pay Day)*. Šio renginio tikslas yra priminti, vyrų ir moterų pajamų nelygybė vis dar egzistuoja ir kad moterims tenka dirbti žymiai ilgiau, jog pasiektų tokį patį rezultatą kaip vyrai. Manau, kad didesnis tokių iniciatyvų skaičius, padėtų dar labiau skatinti šios problemos mažinimą.Kita iniciatyva, siekianti spręsti lyčių nelygybės problemas, yra 2012 Europos Komisijos pradėta rengti *Lygybė apsimoka (Equality pays off)* programa. Šios iniciatyvos tikslas – skatinti įmones tobulinti moterų darbo jėgos potencialą rengiant papildomus mokymus bei renginius. Manau, kad didesnis tokių iniciatyvų skaičius, padėtų dar labiau skatinti šios problemos mažinimą. 
+
+
+### Segregacijos darbo rinkoje mažinimas
+
+Segregacija darbo rinkoje yra viena svarbiausių lyčių pajamų nelygybės priežasčių, todėl būtina ją mažinti (@europeancommision2019). Siekdama mažinti darbo rinkos segregaciją Europos Komisija 2018 metais skyrė 3,3 milijonus eurų projektams, kurie kovoja su lytimi susijusiais stereotipais darbo bei švietimo srityse ir taip skatina vyrus ir moteris rinktis kuo įvairesnes profesijas. Tiesa, mažinti segregaciją darbo rinkoje sekasi sunkiai: nors moterys vis dažniau renkasi darbus, kurie yra laikomi vyriškais, vyrai dar labai retai renkasi darbus, kuriuose dominuoja moterys. Pagrindinė to priežastis yra ne retai mažesni atlyginimai šiose srityse. 
+
+### Neproporcingos šeimos priežiūros naštos mažinimas
+
+Europos Komisija, kaip vieną iš būdų kovoti su vyrų ir moterų darbo užmokesčio skirtumu, įvardina asmeninio ir profesinio gyvenimo derinimo propagavimą. Tai ypač aktualu moterims, kurios dažnai pasitraukia iš darbo rinkos, kad galėtų rūpintis vaikais, o jeigu lieka darbo rinkoje, dažnai pasirenka dirbti mažesnės kvalifikacijos darbus, ar dirba nepilnu etatu. Todėl labai svarbu tobulinti šeimos priežiūros bei darbo suderinimo politiką, padaryti ją patrauklia abejoms lytims. Tai ne tik pagerintų moterų šansus lengviau išlikti darbo rinkoje, bet ir paskatinti vyrus labiau įsitraukti į vaikų priežiūrą bei dažniau naudotis tėvystės atostogų galimybe.(@europeancommision2019)
+
+### Parama mažai uždirbančioms moterims
+
+Mažinti lyčių pajamų nelygybę galėtų parama mažai uždirbančioms moterims. (@rubery2016closing). Pavyzdžiui, Suomijoje, Švedijoje bei Islandijoje buvo nuspręsta teikti papildomas išmokas mažiau uždirbančioms moterims, arba sektoriams, kuriuose dauguma darbuotojų yra moterys. Buvo pastebėta, jog tai padidina moterų pajamas ir mažina minimalaus darbo apmokėjimo atotrūkį tarp sektorių, kuriuose dominuoja vyrai ir tarp sektorių, kuriuose dominuoja moterys. 
+
+# 4. Išvados
+
+  • Nors per pastaruosius metus vyrų ir moterų pajamų nelygybė sumažėjo, su šia problema vis dar susiduria beveik visos Europos valstybės.  
+  •	Lyčių pajamų nelygybę skatina darbo rinkos segregacija, stereotipinis požiūris į moteris, jų darbo jėgos nuvertinimas,      dažnesnis moterų darbas nepilnu etatu.  
+  •	Vyrų ir moterų pajamų nelygybė priklauso nuo amžiaus, moterų nedarbo lygio šalyje bei skirtingų veiklos sektorių.   
+  •	Lyčių pajamų nelygybės problemų priminimas, įmonių skatinimas laikytis lyčių darbo užmokesčio lygybės, segregacijos darbo rinkoje mažinimas bei vyrų skatinimas prisiimti daugiau šeimos priežiūros užduočių, gali padėti mažinti lyčių pajamų nelygybę Europoje.
+
+# Literatūra
